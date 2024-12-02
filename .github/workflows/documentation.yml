@@ -41,11 +41,16 @@ jobs:
       - name: Run docs.py # Executa o script docs.py
         run: python docs.py
 
-      - name: Commit and Push changes # Comita e envia as mudanças
-        run: |
-          git config --global user.email "marcelobuzzetti@gmail.com" # Configura o email do usuário
-          git config --global user.name "Marcelo Buzzetti" # Configura o nome do usuário
-          git add . # Adiciona todas as mudanças
-          git commit -m "Update README.md" # Comita as mudanças com uma mensagem
-          git push # Envia as mudanças para o repositório remoto
-        continue-on-error: true # Continua a execução mesmo se ocorrer um erro
+      # - name: Commit and Push changes # Comita e envia as mudanças
+      #   run: |
+      #     git config --global user.email "marcelobuzzetti@gmail.com" # Configura o email do usuário
+      #     git config --global user.name "Marcelo Buzzetti" # Configura o nome do usuário
+      #     git add . # Adiciona todas as mudanças
+      #     git commit -m "Update README.md" # Comita as mudanças com uma mensagem
+      #     git push # Envia as mudanças para o repositório remoto
+      #   continue-on-error: true # Continua a execução mesmo se ocorrer um erro
+
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
