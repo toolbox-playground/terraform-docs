@@ -12,16 +12,7 @@ Copie a pasta [.docs](./.docs) para dentro do módulo criado.
 Altere os arquivos **header.md** e **footer.md** na .docs que está dentro do módulo. Não alterar os que estão na raiz.
 
 ### Passo 4
-1. Navegue até o diretório onde o script `docs.py` está localizado.
-
-2. Execute o script:
-    ```sh
-    python docs.py
-    ```
-
-3. O script irá percorrer os subdiretórios em busca de diretórios `.docs` e gerar arquivos `README.md` com a documentação do Terraform usando o terraform-docs
-
-4. Você pode rodar o terraform-docs dentro do módulo também. Dentro da pasta do módulo execute
+Execute o terraform-docs dentro do módulo. Dentro da pasta do módulo execute
 
   No Windows
   ```sh
@@ -33,7 +24,7 @@ Altere os arquivos **header.md** e **footer.md** na .docs que está dentro do m�
   terraform-docs -c .docs/.terraform-docs.yml . > README.md
   ```
 
-## docs.py
+# docs.py
 Script em Python para percorrer os subdiretórios em busca de diretórios `.docs` e gerar arquivos `README.md` com a documentação do Terraform usando o terraform-docs
 
 ```python
@@ -61,6 +52,16 @@ if __name__ == "__main__":
     base_directory = os.path.abspath(os.path.dirname(__file__))
     run_terraform_docs(base_directory)
 ```
+
+## Uso
+1. Navegue até o diretório onde o script `docs.py` está localizado.
+
+2. Execute o script:
+    ```sh
+    python docs.py
+    ```
+
+3. O script irá percorrer os subdiretórios em busca de diretórios `.docs` e gerar arquivos `README.md` com a documentação do Terraform usando o terraform-docs
 
 # Pastas exemplos **module** e **resource**
 A pastas [module](./module/) e [resource](./resource/) são um exemplos de um módulo para bucket do GCP e sua utilização.
