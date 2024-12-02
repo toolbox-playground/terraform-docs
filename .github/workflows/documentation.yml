@@ -1,0 +1,65 @@
+name: Generate terraform docs # Nome do workflow
+
+on:
+  push: # Evento que aciona o workflow
+    paths:
+      - 'module/**' # Caminho do código fonte que aciona o workflow
+    branches:
+      - main # Branch que aciona o workflow
+  pull_request: # Evento que aciona o workflow
+    paths:
+      - 'module/**' # Caminho do código fonte que aciona o workflow
+  workflow_dispatch: # Permite que o workflow seja acionado manualmente
+
+jobs:
+  # docs: # Nome do job
+  #   runs-on: ubuntu-latest # Define o ambiente onde o job será executado (Ubuntu mais recente)
+  #   permissions:
+  #     contents: write # Permissão para escrever no conteúdo do repositório
+  #     pull-requests: write # Permissão para escrever em pull requests
+  #   steps:
+  #   - uses: actions/checkout@v3 # Ação para fazer checkout do código fonte
+  #     with:
+  #       ref: ${{ github.event.pull_request.head.ref }} # Refere-se ao branch da pull request
+
+  #   - name: Render terraform docs inside the README.md and push changes back to PR branch # Nome da etapa
+  #     uses: terraform-docs/gh-actions@v1.3.0 # Ação para gerar documentação do Terraform
+  #     with:
+  #       working-dir: module/gcp-bucket # Diretório de trabalho onde o módulo Terraform está localizado
+  #       output-file: README.md # Arquivo de saída onde a documentação será gerada
+  #       config-file: .docs/.terraform-docs.yml # Arquivo de configuração do terraform-docs
+  #       output-method: replace # Método de saída, substitui o conteúdo existente
+  #       git-push: "true" # Habilita o push das mudanças de volta para o branch da PR
+  
+  python:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Permissão para escrever no conteúdo do repositório
+      pull-requests: write # Permissão para escrever em pull requests
+    steps:
+      - uses: actions/checkout@v3 # Ação para fazer checkout do código fonte
+        with:
+          ref: ${{ github.event.pull_request.head.ref }} # Refere-se ao branch da pull request
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+
+      - name: Install terraform-docs
+        run: |
+          curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-$(uname)-amd64.tar.gz
+          tar -xzf terraform-docs.tar.gz
+          chmod +x terraform-docs
+          mv terraform-docs /usr/local/bin/terraform-docs
+
+      - name: Run docs.py
+        run: python docs.py
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.email "marcelobuzzetti@gmail.com"
+          git config --global user.name "Marcelo Buzzetti"
+          git add .
+          git commit -m "Update README.md"
+          git push
