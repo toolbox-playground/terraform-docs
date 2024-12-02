@@ -34,6 +34,7 @@ jobs:
           tar -xzf terraform-docs.tar.gz # Descompacta o arquivo baixado
           chmod +x terraform-docs # Torna o arquivo executável
           mv terraform-docs /usr/local/bin/terraform-docs # Move o arquivo para o diretório binário
+          rm terraform-docs.tar.gz # Remove o arquivo compactado
 
       - name: Run docs.py # Executa o script docs.py
         run: python docs.py
