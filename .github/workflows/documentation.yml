@@ -30,11 +30,12 @@ jobs:
 
       - name: Install terraform-docs # Instala o terraform-docs
         run: |
-          curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-$(uname)-amd64.tar.gz
-          tar -xzf terraform-docs.tar.gz # Descompacta o arquivo baixado
-          chmod +x terraform-docs # Torna o arquivo executável
-          mv terraform-docs /usr/local/bin/terraform-docs # Move o arquivo para o diretório binário
+          curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-$(uname)-amd64.tar.gz # Baixa o arquivo compactado
+          tar -xzf terraform-docs.tar.gz terraform-docs # Descompacta o arquivo baixado
+          chmod +x terraform-docs/terraform-docs # Torna o arquivo executável
+          mv terraform-docs/terraform-docs /usr/local/bin/terraform-docs # Move o arquivo para o diretório binário
           rm terraform-docs.tar.gz # Remove o arquivo compactado
+          rm -rf terraform-docs # Remove o diretório
 
       - name: Run docs.py # Executa o script docs.py
         run: python docs.py
