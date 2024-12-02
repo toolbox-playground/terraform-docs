@@ -1,55 +1,68 @@
-name: Generate terraform docs # Nome do workflow
+# Nome do workflow
+name: Generate terraform docs
 
+# Evento que aciona o workflow
 on:
-  push: # Evento que aciona o workflow
+  push:
+    # Caminho do código fonte que aciona o workflow
     paths:
-      - 'module/**' # Caminho do código fonte que aciona o workflow
+      - 'module/**'
+    # Branch que aciona o workflow
     branches:
-      - main # Branch que aciona o workflow
-  pull_request: # Evento que aciona o workflow
+      - main
+  pull_request:
+    # Caminho do código fonte que aciona o workflow
     paths:
-      - 'module/**' # Caminho do código fonte que aciona o workflow
-  workflow_dispatch: # Permite que o workflow seja acionado manualmente
+      - 'module/**'
+  # Permite que o workflow seja acionado manualmente
+  workflow_dispatch:
 
 jobs:
-  
   python:
-    runs-on: ubuntu-latest # Define o sistema operacional do runner
+    # Define o sistema operacional do runner
+    runs-on: ubuntu-latest
     permissions:
-      contents: write # Permissão para escrever no conteúdo do repositório
-      pull-requests: write # Permissão para escrever em pull requests
+      # Permissão para escrever no conteúdo do repositório
+      contents: write
+      # Permissão para escrever em pull requests
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v3 # Ação para fazer checkout do código fonte
+      # Ação para fazer checkout do código fonte
+      - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.ref }} # Refere-se ao branch da pull request
+          # Refere-se ao branch da pull request
+          ref: ${{ github.event.pull_request.head.ref }}
 
-      - name: Set up Python # Configura o Python
+      # Configura o Python
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.12' # Define a versão do Python
+          # Define a versão do Python
+          python-version: '3.12'
 
-      - name: Install terraform-docs # Instala o terraform-docs
+      # Instala o terraform-docs
+      - name: Install terraform-docs
         run: |
-          curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-$(uname)-amd64.tar.gz # Baixa o arquivo compactado
-          mkdir terraform-docs # Cria um diretório
-          tar -xzf terraform-docs.tar.gz -C terraform-docs # Descompacta o arquivo baixado
-          chmod +x terraform-docs/terraform-docs # Torna o arquivo executável
-          mv terraform-docs/terraform-docs /usr/local/bin/terraform-docs # Move o arquivo para o diretório binário
-          rm terraform-docs.tar.gz # Remove o arquivo compactado
-          rm -rf terraform-docs # Remove o diretório
+          # Baixa o arquivo compactado
+          curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-$(uname)-amd64.tar.gz
+          # Cria um diretório
+          mkdir terraform-docs
+          # Descompacta o arquivo baixado
+          tar -xzf terraform-docs.tar.gz -C terraform-docs
+          # Torna o arquivo executável
+          chmod +x terraform-docs/terraform-docs
+          # Move o arquivo para o diretório binário
+          mv terraform-docs/terraform-docs /usr/local/bin/terraform-docs
+          # Remove o arquivo compactado
+          rm terraform-docs.tar.gz
+          # Remove o diretório
+          rm -rf terraform-docs
 
-      - name: Run docs.py # Executa o script docs.py
+      # Executa o script docs.py
+      - name: Run docs.py
         run: python docs.py
 
-      # - name: Commit and Push changes # Comita e envia as mudanças
-      #   run: |
-      #     git config --global user.email "marcelobuzzetti@gmail.com" # Configura o email do usuário
-      #     git config --global user.name "Marcelo Buzzetti" # Configura o nome do usuário
-      #     git add . # Adiciona todas as mudanças
-      #     git commit -m "Update README.md" # Comita as mudanças com uma mensagem
-      #     git push # Envia as mudanças para o repositório remoto
-      #   continue-on-error: true # Continua a execução mesmo se ocorrer um erro
-
+      # Comita e envia as mudanças
       - name: Commit & Push changes
         uses: actions-js/push@master
         with:

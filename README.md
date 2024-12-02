@@ -3,7 +3,7 @@
 # Como usar o terraform-docs para documentar os módulos do Terraform
 
 ### Passo 1
-Instale o [terraform-docs](https://terraform-docs.io/).
+Instale o [terraform-docs](https://terraform-docs.io/) e o [Python](https://www.python.org/downloads/)
 
 ### Passo 2
 Copie a pasta [.docs](./.docs) para dentro do módulo criado.
@@ -12,9 +12,55 @@ Copie a pasta [.docs](./.docs) para dentro do módulo criado.
 Altere os arquivos **header.md** e **footer.md** na .docs que está dentro do módulo. Não alterar os que estão na raiz.
 
 ### Passo 4
-Rode `terraform-docs -c .\.docs\.terraform-docs.yml . > README.md`.
-    
-    OBS.: Certifique-se de estar dentro da pasta do módulo.
+1. Navegue até o diretório onde o script `docs.py` está localizado.
+
+2. Execute o script:
+    ```sh
+    python docs.py
+    ```
+
+3. O script irá percorrer os subdiretórios em busca de diretórios `.docs` e gerar arquivos `README.md` com a documentação do Terraform usando o terraform-docs
+
+4. Você pode rodar o terraform-docs dentro do módulo também. Dentro da pasta do módulo execute
+
+  No Windows
+  ```sh
+  terraform-docs -c .\.docs\.terraform.docs.yaml . > README.md
+  ```
+
+  No Linux
+  ```sh
+  terraform-docs -c .docs/.terraform-docs.yml . > README.md
+  ```
+
+## docs.py
+Script em Python para percorrer os subdiretórios em busca de diretórios `.docs` e gerar arquivos `README.md` com a documentação do Terraform usando o terraform-docs
+
+```python
+import os
+import subprocess
+
+def run_terraform_docs(directory):
+    for root, dirs, files in os.walk(directory):
+        if '.docs' in dirs:
+            if root != directory:
+                try:
+                    # Comando a ser executado
+                    command = ["terraform-docs", "-c", f"{root}/.docs/.terraform-docs.yml", f"{root}"]
+                    print(f"Executando terraform-docs no {root}")
+                    with open(f"{root}/README.md", "w") as output_file:
+                        # Executa o comando e redireciona a saída para o arquivo
+                        subprocess.run(command, stdout=output_file, stderr=subprocess.PIPE, text=True, check=True)
+                        print("README.md gerado com sucesso!")
+                except subprocess.CalledProcessError as e:
+                    print("Erro ao executar o comando terraform-docs:")
+                    print(e.stderr)
+
+
+if __name__ == "__main__":
+    base_directory = os.path.abspath(os.path.dirname(__file__))
+    run_terraform_docs(base_directory)
+```
 
 # Pastas exemplos **module** e **resource**
 A pastas [module](./module/) e [resource](./resource/) são um exemplos de um módulo para bucket do GCP e sua utilização.
@@ -26,64 +72,75 @@ O arquivo [documentation.yml](./.github/workflows/documentation.yml) é um workf
 ## Exemplo de `documentation.yml`
 
 ```yaml
-name: Generate terraform docs # Nome do workflow
+# Nome do workflow
+name: Generate terraform docs
 
+# Evento que aciona o workflow
 on:
-  push: # Evento que aciona o workflow
+  push:
+    # Caminho do código fonte que aciona o workflow
     paths:
-      - 'module/**' # Caminho do código fonte que aciona o workflow
+      - 'module/**'
+    # Branch que aciona o workflow
     branches:
-      - main # Branch que aciona o workflow
-  pull_request: # Evento que aciona o workflow
+      - main
+  pull_request:
+    # Caminho do código fonte que aciona o workflow
     paths:
-      - 'module/**' # Caminho do código fonte que aciona o workflow
-  workflow_dispatch: # Permite que o workflow seja acionado manualmente
+      - 'module/**'
+  # Permite que o workflow seja acionado manualmente
+  workflow_dispatch:
 
 jobs:
-  docs: # Nome do job
-    runs-on: ubuntu-latest # Define o ambiente onde o job será executado (Ubuntu mais recente)
+  python:
+    # Define o sistema operacional do runner
+    runs-on: ubuntu-latest
     permissions:
-      contents: write # Permissão para escrever no conteúdo do repositório
-      pull-requests: write # Permissão para escrever em pull requests
+      # Permissão para escrever no conteúdo do repositório
+      contents: write
+      # Permissão para escrever em pull requests
+      pull-requests: write
     steps:
-    - uses: actions/checkout@v3 # Ação para fazer checkout do código fonte
-      with:
-        ref: ${{ github.event.pull_request.head.ref }} # Refere-se ao branch da pull request
+      # Ação para fazer checkout do código fonte
+      - uses: actions/checkout@v3
+        with:
+          # Refere-se ao branch da pull request
+          ref: ${{ github.event.pull_request.head.ref }}
 
-    - name: Render terraform docs inside the README.md and push changes back to PR branch # Nome da etapa
-      uses: terraform-docs/gh-actions@v1.3.0 # Ação para gerar documentação do Terraform
-      with:
-        working-dir: module/gcp-bucket # Diretório de trabalho onde o módulo Terraform está localizado
-        output-file: README.md # Arquivo de saída onde a documentação será gerada
-        config-file: .docs/.terraform-docs.yml # Arquivo de configuração do terraform-docs
-        output-method: replace # Método de saída, substitui o conteúdo existente
-        git-push: "true" # Habilita o push das mudanças de volta para o branch da PR
+      # Configura o Python
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          # Define a versão do Python
+          python-version: '3.12'
+
+      # Instala o terraform-docs
+      - name: Install terraform-docs
+        run: |
+          # Baixa o arquivo compactado
+          curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v0.19.0/terraform-docs-v0.19.0-$(uname)-amd64.tar.gz
+          # Cria um diretório
+          mkdir terraform-docs
+          # Descompacta o arquivo baixado
+          tar -xzf terraform-docs.tar.gz -C terraform-docs
+          # Torna o arquivo executável
+          chmod +x terraform-docs/terraform-docs
+          # Move o arquivo para o diretório binário
+          mv terraform-docs/terraform-docs /usr/local/bin/terraform-docs
+          # Remove o arquivo compactado
+          rm terraform-docs.tar.gz
+          # Remove o diretório
+          rm -rf terraform-docs
+
+      # Executa o script docs.py
+      - name: Run docs.py
+        run: python docs.py
+
+      # Comita e envia as mudanças
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 Este workflow é acionado em push ou pull request para a branch `main`, garantindo que a documentação esteja sempre atualizada.
-
-Esse workflow está definido para rodar somente na pasta **module/gcp-bucket**. 
-
-Para rodar em mais pastas deverá ser adicionado no `working-dir` as pastas, ex.: `working-dir: module/gcp-bucket,module/gcp-run`
-
-# docs.py
-
-Este script Python é usado para gerar documentação para módulos Terraform usando a ferramenta `terraform-docs`. Ele percorre os diretórios em busca de configurações específicas e gera arquivos `README.md` com a documentação.
-
-## Requisitos
-
-- Python 3.x
-- `terraform-docs` instalado e disponível no PATH
-
-Certifique-se de ter o `terraform-docs` instalado. Você pode instalá-lo seguindo as instruções na [documentação oficial](https://terraform-docs.io/user-guide/installation/).
-
-## Uso
-
-1. Navegue até o diretório onde o script `docs.py` está localizado.
-
-2. Execute o script:
-    ```sh
-    python docs.py
-    ```
-
-3. O script irá percorrer os subdiretórios em busca de diretórios `.docs` e gerar arquivos `README.md` com a documentação do Terraform.
