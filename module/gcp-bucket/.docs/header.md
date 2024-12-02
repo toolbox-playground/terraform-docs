@@ -2,7 +2,7 @@
 
 # GCP Bucket
 
-Breve descrição do que p módulo faz.
+Breve descrição do que o módulo faz.
 
 ## Important
 
