@@ -48,3 +48,4 @@ jobs:
           git add . # Adiciona todas as mudanças
           git commit -m "Update README.md" # Comita as mudanças com uma mensagem
           git push # Envia as mudanças para o repositório remoto
+        continue-on-error: true # Continua a execução mesmo se ocorrer um erro
